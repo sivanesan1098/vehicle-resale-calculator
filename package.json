@@ -7,8 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test src/lib/valuation/__tests__/*.test.ts",
-    "scrape:carwale": "tsx src/scripts/scrape-carwale.ts"
+    "test": "tsx --test src/lib/valuation/__tests__/*.test.ts src/lib/firecrawl/__tests__/*.test.ts",
+    "scrape:carwale": "tsx src/scripts/scrape-carwale.ts",
+    "scrape:firecrawl": "tsx src/scripts/scrape-vehicles-firecrawl.ts",
+    "scrape:firecrawl:bikes": "tsx src/scripts/scrape-vehicles-firecrawl.ts --bikes",
+    "scrape:firecrawl:cars": "tsx src/scripts/scrape-vehicles-firecrawl.ts --cars"
   },
   "dependencies": {
     "@google/genai": "^2.24.0",
@@ -34,6 +37,7 @@
     "drizzle-kit": "^0.31.11",
     "eslint": "^9",
     "eslint-config-next": "16.3.6",
+    "firecrawl-cli": "^1.24.6",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5"

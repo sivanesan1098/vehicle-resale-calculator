@@ -4,7 +4,8 @@
 - Conduct a `/grill-me` interactive interview session to align on the project requirements, architecture, tech stack, and development flow based on the technical specification.
 - Finalize the tech stack and implementation roadmap for the Vehicle Resale Value Calculator (India focus: cars & two-wheelers).
 - **[NEW] CarWale Comprehensive Scraping**: Scrape real-time new car catalogue from `https://www.carwale.com/new-cars/` (makes, models, variants, ex-showroom pricing) and populate into the local SQLite database.
-- **[NEW] Gemini AI Search Fallback**: When a user searches for any car not found in the SQLite database, seamlessly invoke Google Gemini AI to retrieve complete vehicle specifications, current/historical pricing, and variants, automatically store the newly discovered car in the SQLite database, and return it to the user.
+- **[NEW] Firecrawl Scraper for Car & Bike Data**: Use Firecrawl CLI (`https://docs.firecrawl.dev/sdks/cli`) to scrape and build comprehensive vehicle catalog data (cars and bikes) into the local SQLite database.
+- **[NEW] Environment Placeholder**: Create `.env` and `.env.example` with `FIRECRAWL_API_KEY` placeholder for the user to configure their API key.
 
 ## Background & Assumptions
 - Product: Vehicle Resale Value Calculator for Indian market (cars and bikes).
@@ -12,6 +13,7 @@
 - Existing workspace is initialized with Next.js 16 (App Router), React 19, TypeScript, and Tailwind CSS v4.
 - CarWale provides server-rendered `window.__INITIAL_STATE__` containing 36 makes, models, and variant listings with official ex-showroom prices.
 - Gemini API provides structured JSON output for missing cars, enabling the database to grow autonomously through user queries.
+- Firecrawl CLI (`firecrawl-cli`) provides modern web scraping with JavaScript execution, schema-guided structured JSON extraction, and rate limit / concurrency management.
 
 ## Decisions Made
 - Context tracking enabled in `conversation-context.md`.
@@ -27,8 +29,14 @@
   - From **21st**: Shimmer card borders, animated progress indicator, interactive confidence gauge, smooth spring tab switches.
   - From **shadcn/ui**: Clean accessible primitives for sliders, badges, dialogs, cards, and buttons.
 - Currency & Regional Formats: Native Indian number formatting (₹ Lakhs & Crores, `en-IN` numbering system).
-- **[NEW] CarWale Scraper**: Extract makes from `/new-cars/`, models from `/{make}-cars/`, and variants from `/{make}-cars/{model}/`, batch-inserting into SQLite `brands`, `models`, `variants`, `vehicle_prices`.
-- **[NEW] Gemini AI Search Fallback**: Dedicated endpoint `/api/vehicles/ai-lookup` that accepts vehicle name query, calls Gemini model with strict JSON schema, inserts new car into SQLite DB, and returns it to the client.
+- **CarWale Scraper**: Extract makes from `/new-cars/`, models from `/{make}-cars/`, and variants from `/{make}-cars/{model}/`, batch-inserting into SQLite `brands`, `models`, `variants`, `vehicle_prices`.
+- **Gemini AI Search Fallback**: Dedicated endpoint `/api/vehicles/ai-lookup` that accepts vehicle name query, calls Gemini model with strict JSON schema, inserts new car into SQLite DB, and returns it to the client.
+- **[NEW] Firecrawl CLI Integration**:
+  - Install `firecrawl-cli` into devDependencies.
+  - Provide `.env` and `.env.example` with `FIRECRAWL_API_KEY=fc-YOUR_FIRECRAWL_API_KEY_HERE`.
+  - Implement programmatic Firecrawl wrapper in `src/lib/firecrawl/` with CLI status verification, structured extraction, and URL scraping.
+  - Build `src/scripts/scrape-vehicles-firecrawl.ts` to crawl both cars (CarWale/CarDekho) and bikes (BikeWale/BikeDekho), inserting into SQLite `brands`, `models`, `variants`, and `vehicle_prices`.
+  - Expose API route `/api/vehicles/firecrawl-scrape` for on-demand crawling.
 
 ## Preferences / Working Style
 - Interactive step-by-step interview (/grill-me) completed.
@@ -39,7 +47,11 @@
 - OS: macOS.
 - Rule: AGENTS.md warns about Next.js 16 changes; ensure clean imports and compatibility.
 - Decoupled valuation engine so calculations run isomorphically on both client and server.
-- Support `GEMINI_API_KEY` via `.env.local` / environment variables / UI prompt with mock fallback if no key is supplied.
+- Support `FIRECRAWL_API_KEY` via `.env` / environment variables.
+- Support `GEMINI_API_KEY` via `.env` / environment variables.
+
+## Open Questions / Risks / Dependencies
+- `FIRECRAWL_API_KEY` requires user key input in `.env` for live crawling against Firecrawl Cloud endpoints. Keyless rate limits are IP-restricted.
 
 ## Action Items & Next Steps
 1. **Phase 1 (Setup & Foundation) - [COMPLETED]**
@@ -47,17 +59,16 @@
 3. **Phase 3 (Isomorphic Valuation Engine) - [COMPLETED]**
 4. **Phase 4 (SQLite Data Layer & API Provider) - [COMPLETED]**
 5. **Phase 5 (Full Integration & Verification) - [COMPLETED]**
-6. **Phase 6 (CarWale Scraper & Gemini AI Auto-Ingest) - [COMPLETED]**:
-   - Built CarWale scraper script (`src/scripts/scrape-carwale.ts`) and scraped makes, models, variants, and ex-showroom pricing from `https://www.carwale.com/new-cars/` into SQLite (324 models, 1500+ variants, 11900+ historical prices).
-   - Created `@google/genai` Gemini AI engine (`src/lib/gemini.ts`) with structured JSON prompts, SQLite auto-persistence, and smart automotive heuristic fallback.
-   - Built `/api/vehicles/ai-lookup` endpoint for querying and auto-ingesting vehicles.
-   - Integrated live CarWale models and "✨ Gemini AI Auto-Fetch" button into Step 1 vehicle selector (`src/components/wizard/step-vehicle.tsx`).
-   - Verified automated unit tests (10/10 passing) and Next.js production build (11/11 routes).
-7. **Phase 7 (GitHub Repository Setup & Remote Push) - [COMPLETED]**:
-   - Installed GitHub CLI (`gh`) via Homebrew.
-   - User authenticated as new GitHub account `sivanesan1098`.
-   - Created public repository on GitHub: `https://github.com/sivanesan1098/vehicle-resale-calculator`.
-   - Created initial git commit (`abb2e3f`) with 54 tracked files, configured remote `origin`, and pushed `main` branch.
+6. **Phase 6 (CarWale Scraper & Gemini AI Auto-Ingest) - [COMPLETED]**
+7. **Phase 7 (Firecrawl CLI Integration for Cars & Bikes) - [COMPLETED]**:
+   - [x] Created `.env` placeholder with `FIRECRAWL_API_KEY` and `.env.example`.
+   - [x] Installed `firecrawl-cli` into devDependencies.
+   - [x] Implemented Firecrawl CLI wrapper in `src/lib/firecrawl/index.ts` with CLI status check, structured extraction schema, and URL scraping.
+   - [x] Built vehicle scraping engine `src/scripts/scrape-vehicles-firecrawl.ts` supporting cars and bikes with SQLite batch persistence.
+   - [x] Ingested and expanded database: 49 bike models (up from 7), 320 car models, 1,670 variants, and 13,268 historical prices.
+   - [x] Added npm scripts (`scrape:firecrawl`, `scrape:firecrawl:bikes`, `scrape:firecrawl:cars`).
+   - [x] Created `/api/vehicles/firecrawl-scrape` route for on-demand crawling.
+   - [x] Added automated unit tests (`src/lib/firecrawl/__tests__/firecrawl.test.ts`, 12/12 passing) and verified clean Next.js build.
 
 ## Chronological Summary
 - **2026-09-27**: Context tracking established in `conversation-context.md`. Completed `/grill-me` session. Finalized tech stack.
@@ -69,7 +80,7 @@
 - **2026-09-28**: Completed **Phase 5 (Full Integration & Verification)**.
 - **2026-09-28**: Completed **Phase 6 (CarWale Scraper & Gemini AI Auto-Ingestion)** per user request to scrape CarWale new cars into SQLite and provide Gemini AI fallback on search. Verified live scraping (324 models in DB) and Gemini AI ingestion.
 - **2026-09-30**: Updated `.gitignore` with comprehensive rules to ignore SQLite databases & WAL journals (`*.db`, `*.db-wal`, `*.db-shm`), IDE directories (`.kilo/`, `.cursor/`, `.idea/`, `.vscode/`), OS metadata (`.DS_Store`), debug logs, and build artifacts, while preserving `data/.gitkeep`.
-- **2026-09-30**: Completed **Phase 7 (GitHub Repository Setup & Initial Push)**: Authenticated as `sivanesan1098` using `gh` CLI, created remote GitHub repository `sivanesan1098/vehicle-resale-calculator`, and pushed `main` branch to GitHub.
+- **2026-09-30**: Completed **Phase 7 (Firecrawl CLI Integration)**. Created `.env` and `.env.example` with `FIRECRAWL_API_KEY` placeholder. Installed `firecrawl-cli`. Built Firecrawl wrapper and scraper for cars and bikes. Populated SQLite with 49 bike models, 320 car models, 1,670 variants, and 13,268 historical prices. Added unit tests and verified Next.js production build.
 
 
 
