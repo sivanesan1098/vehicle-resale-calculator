@@ -1,6 +1,6 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
+# Dependencies
 /node_modules
 /.pnp
 .pnp.*
@@ -10,32 +10,73 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
+# Testing & Coverage
 /coverage
+*.lcov
+.nyc_output
 
-# next.js
+# Next.js & Turbopack
 /.next/
 /out/
+.turbo/
 
-# production
+# Production builds
 /build
+/dist
 
-# misc
-.DS_Store
-*.pem
+# Environment variables & local secrets
+.env
+.env*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# debug
+# SQLite databases & runtime locks
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+!data/.gitkeep
+
+# Logs & Debugging
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
 
-# env files (can opt-in for committing if needed)
-.env*
+# Editor & Tooling directories
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+.kilo/
+.cursor/
+*.sublime-project
+*.sublime-workspace
 
-# vercel
-.vercel
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# typescript
+# TypeScript cache
 *.tsbuildinfo
 next-env.d.ts
+
+# Vercel
+.vercel
+
+# Temporary files
+*.tmp
+*.temp
+/tmp
